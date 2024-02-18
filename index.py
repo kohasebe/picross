@@ -4,18 +4,14 @@ import config
 import func
 
 # 行列の設定をする
-row_length = config.picross["row"]["length"]
-column_length = config.picross["column"]["length"]
+row_length = len(config.picross["row"]["setting"])
+column_length = len(config.picross["column"]["setting"])
 
 # 盤面を作る
 df = pd.DataFrame(np.full((row_length, column_length), config.empty))
 
 print("初期盤面はこちら")
 print(df)
-
-
-
-
 
 func_name = func.open1
 
@@ -30,7 +26,7 @@ func_name = func.open1
 # 全列の操作
 for i in range(column_length):
     # df[i] = df[i].apply(func_name, args=(i, "column",))
-    df = func_name(df, i, "column")
+    df = func_name(df[i], i, "column", config.picross)
     # for i in range(config.row_num):
     #     print(df[i][0])
 
@@ -48,6 +44,35 @@ for i in range(column_length):
 # 全行の操作
 # for i in range(len(df.index)):
 #     df.iloc[i] = df.iloc[i].apply(func_name)
+
+
+line_types = ["column", "row"]
+logics = ["open1", "open2"]
+# 最後のmainの形を想像する
+while (func.check_end()):
+    before = df
+    for line_type in line_types:
+        setting = config.picross[line_type]["setting"]
+        for i in range(len(setting)):
+            for logic in logics:
+                if (line_type == "column"):
+                    df[i] = func.logic(df[i], setting[i])
+                elif (line_type == "row"):
+                    df.iloc[i] = func.logic(df[i], setting[i])
+
+    if (func.check_diff(before, df)):
+        print("差分があるので継続します")
+    else:
+        print("前回と差分がなくなりました")
+        if (func.check_end()):
+            print("現存のロジックで全てのマスを開けることができました")
+        else:
+            print("現存のロジックがたりないようです")
+            break
+
+
+
+
 
 print("結果はこちら")
 print(df)

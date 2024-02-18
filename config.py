@@ -1,12 +1,12 @@
 import sys
 
 empty = 'empty'
-fill = 'fill'
+blank = 'blank'
 open = 'open'
 
 picross = {
+    "length": 5,
     "row": {
-        "length": 5,
         "setting": [
             [1,1],
             [1,1],
@@ -16,7 +16,6 @@ picross = {
         ]
     },
     "column": {
-        "length": 5,
         "setting": [
             [0],
             [2,2],
@@ -26,11 +25,3 @@ picross = {
         ]
     }
 }
-
-# 行の設定
-if len(picross["row"]["setting"]) != picross["row"]["length"]:
-    sys.exit("[ERROR]行の長さと設定が異なります")
-
-# 列の設定
-if len(picross["column"]["setting"]) != picross["column"]["length"]:
-    sys.exit("[ERROR]列の長さと設定が異なります")
