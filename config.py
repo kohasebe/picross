@@ -4,6 +4,10 @@ empty = 'empty'
 blank = 'blank'
 open = 'open'
 
+# empty = '□'
+# blank = 'x'
+# open = '■'
+
 # expected = {
 #     0: [o, o, o, o, o],
 #     1: [o, o, e, e, e],

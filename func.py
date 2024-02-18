@@ -109,8 +109,17 @@ def open4(dfi, settingi):
 # 4 [e,e,e,e,e]のとき[e,o,o,o,e]にする
 def open5(dfi, settingi):
     length = config.picross["length"]
+    line_serialize = get_line_serialize(dfi)
+    max_empty_size = 0
+    # 強烈に上書きをするのでemptyのサイズをチェックして一回しか実施しないようにする
+    for ls in line_serialize:
+        status = ls.split(":")
+        if (status[0] == config.empty):
+            if (max_empty_size == 0 or status[1] > max_empty_size):
+                max_empty_size = int(status[1])
+
     line_serialize = []
-    if (settingi[0] > length/2):
+    if (settingi[0] > length/2 and max_empty_size >= settingi[0]):
         diff = length - settingi[0]
         line_serialize = [
             config.empty + ":" + str(diff),
@@ -122,6 +131,7 @@ def open5(dfi, settingi):
         return dfi
 
 # 3 [x,e,e,e,e]のとき[x,e,o,o,e]にする
+# 3 [x,e,e,o,e]のとき[x,e,o,o,e]にする
 # 1,4 [o,x,e,e,e,e,e]のとき[o,x,e,o,o,o,e]にする
 # def open5(dfi, settingi):
 #     return
@@ -174,6 +184,11 @@ def open5(dfi, settingi):
 #     status = get_status(dfi)
 #     return
 
+# 端っこが確定した時の処理
+# 2 1 [x,o,e,e,e]のとき[x,o,o,e,e]にする
+# 2 1 [e,x,o,e,e,e]のとき[e,x,o,o,x,o]にする(openの数が設定と一致するので次のループでeはxになる)
+# def open7(dfi, settingi):
+#     return
 
 
 
