@@ -60,23 +60,50 @@ class TestStringMethods(unittest.TestCase):
             1: [o, e, e, e, o],
         }
         df = pd.DataFrame(data).transpose()
-        actual = func.status(df, 0, "column")
+        actual = func.get_status(df[0])
         self.assertEqual(actual, expect_column0)
 
-        actual = func.status(df, 0, "row")
+        actual = func.get_status(df.iloc[0])
         self.assertEqual(actual, expect_row0)
 
-        actual = func.status(df, 1, "row")
+        actual = func.get_status(df.iloc[1])
         self.assertEqual(actual, expect_row1)
 
-    def test_end_check_true(self):
+    # 開始時点
+    def test_check_continue_start(self):
         data = {
-            0: [e, e, o, e, e],
-            1: [o, o, e, e, o],
+            0: [e, e],
+            1: [e, e],
         }
         df = pd.DataFrame(data).transpose()
 
         config.picross = {
+            "length": 2,
+            "row": {
+                "setting": [
+                    [1],
+                    [2],
+                ]
+            },
+            "column": {
+                "setting": [
+                    [2],[1]
+                ]
+            }
+        }
+
+        self.assertTrue(func.check_continue(df))
+
+    # 開いてる数が足りない
+    def test_check_continue_true(self):
+        data = {
+            0: [e, e, o, e, e],
+            1: [e, o, e, e, o],
+        }
+        df = pd.DataFrame(data).transpose()
+
+        config.picross = {
+            "length": 5,
             "row": {
                 "setting": [
                     [1],
@@ -89,6 +116,32 @@ class TestStringMethods(unittest.TestCase):
                 ]
             }
         }
+
+        self.assertTrue(func.check_continue(df))
+
+    def test_check_continue_false(self):
+        data = {
+            0: [e, e, o, e, e],
+            1: [o, o, e, e, o],
+        }
+        df = pd.DataFrame(data).transpose()
+
+        config.picross = {
+            "length": 5,
+            "row": {
+                "setting": [
+                    [1],
+                    [2,1],
+                ]
+            },
+            "column": {
+                "setting": [
+                    [1],[1],[1],[0],[1]
+                ]
+            }
+        }
+
+        self.assertFalse(func.check_continue(df))
 
     # 全長と一致するラインを開けるテスト（列）
     def test_open1_column(self):
@@ -120,19 +173,7 @@ class TestStringMethods(unittest.TestCase):
         }
 
         actual_df = pd.DataFrame(empty_data_5x5)
-
-        # line_types = ["column", "row"]
-        # for line_type in line_types:
-        #     setting = config.picross[line_type]["setting"]
-        #     for i in range((len(setting))):
-        #         if (line_type == "column"):
-        #             actual_df[i] = func.open1(actual_df, i, setting)
-        #         elif (line_type == "row"):
-        #             actual_df.iloc[i] = func.open1(actual_df, i, setting)
-
-        setting = config.picross["column"]["setting"]
-        for i in range(len(setting)):
-            actual_df[i] = func.open1(actual_df[i], setting[i])
+        func.main_logic(actual_df, "open1")
 
         assert_frame_equal(actual_df, expected_df)
 
@@ -166,19 +207,79 @@ class TestStringMethods(unittest.TestCase):
         }
 
         actual_df = pd.DataFrame(empty_data_5x5)
+        func.main_logic(actual_df, "open1")
 
-        # line_types = ["column", "row"]
-        # for line_type in line_types:
-        #     setting = config.picross[line_type]["setting"]
-        #     for i in range((len(setting))):
-        #         if (line_type == "column"):
-        #             actual_df[i] = func.open1(actual_df, i, setting)
-        #         elif (line_type == "row"):
-        #             actual_df.iloc[i] = func.open1(actual_df, i, setting)
+        assert_frame_equal(actual_df, expected_df)
 
-        setting = config.picross["row"]["setting"]
-        for i in range(len(setting)):
-            actual_df.iloc[i] = func.open1(actual_df.iloc[i], setting[i])
+    # 全長と一致するラインを開けるテスト
+    def test_open1_all(self):
+        expected_data = {
+            0: [o, o, o, o, o],
+            1: [e, e, e, e, e],
+            2: [e, e, e, e, e],
+            3: [e, e, e, e, e],
+            4: [o, o, o, o, o]
+        }
+        expected_df = pd.DataFrame(expected_data).transpose()
+
+        config.picross = {
+            "length": 5,
+            "row": {
+                "setting": [
+                    [5],
+                    [0],
+                    [0],
+                    [0],
+                    [5]
+                ]
+            },
+            "column": {
+                "setting": [
+                    [2], [2], [2], [2], [2]
+                ]
+            }
+        }
+
+        actual_df = pd.DataFrame(empty_data_5x5)
+
+        func.main_logic(actual_df, "open1")
+
+        assert_frame_equal(actual_df, expected_df)
+
+    # 全長と一致するラインを開けるテスト
+    def test_open2_column(self):
+        expected_data = {
+            0: [o, e, e, e, e],
+            1: [x, e, e, e, e],
+            2: [o, e, e, e, e],
+            3: [x, e, e, e, e],
+            4: [o, e, e, e, e]
+        }
+        expected_df = pd.DataFrame(expected_data).transpose()
+
+        config.picross = {
+            "length": 5,
+            "row": {
+                "setting": [
+                    [1],
+                    [0],
+                    [1],
+                    [0],
+                    [1]
+                ]
+            },
+            "column": {
+                "setting": [
+                    [1,1,1], [0], [0], [0], [0]
+                ]
+            }
+        }
+
+        actual_df = pd.DataFrame(empty_data_5x5)
+
+        func.main_logic(actual_df, "open2")
+
+        # assert_frame_equal(actual_df, expected_df)
 
 
 if __name__ == '__main__':
