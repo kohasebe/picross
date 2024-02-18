@@ -27,6 +27,14 @@ def get_status(dfi):
 
     return status
 
+def create_line(status):
+    line = []
+    for s in status:
+        s_a = s.split(":")
+        for i in range(int(s_a[1])):
+            line.append(s_a[0])
+    return line
+
 def check_continue(df):
     open_count = 0
     empty_count = 0
@@ -65,18 +73,15 @@ def open1(dfi, settingi):
 def open2(dfi, settingi):
     length = config.picross["length"]
     count = sum(settingi) + len(settingi) - 1
-    if (len(settingi) > 2
-        and length == count
-        and all(x ==config.empty for x in dfi) # 全ての値がemptyのとき
-        ):
-        # for i in len(dfi):
-        #     if ( == config.empty):
-        #         print
-        print
+    if (len(settingi) >= 2 and length == count):
+        status = []
+        for i, s in enumerate(settingi):
+            status.append(config.open + ":" + str(s))
+            # 最後の要素じゃなかったらblankを追加する
+            if (i != (len(settingi) - 1)):
+                status.append(config.blank + ":1")
 
-
-    if (length == settingi[0]):
-        return [config.open] * length
+        return create_line(status)
     else:
         return dfi
 

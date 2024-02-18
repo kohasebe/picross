@@ -1,11 +1,10 @@
 import unittest
 from pandas.testing import assert_frame_equal
 import pandas as pd
-import numpy as np
 import config
 import func
 
-class TestStringMethods(unittest.TestCase):
+class TestClass(unittest.TestCase):
     global e, x, o, empty_data_5x5
     e = config.empty
     x = config.blank
@@ -119,6 +118,7 @@ class TestStringMethods(unittest.TestCase):
 
         self.assertTrue(func.check_continue(df))
 
+    # 全要素が埋まった時
     def test_check_continue_false(self):
         data = {
             0: [e, e, o, e, e],
@@ -143,7 +143,6 @@ class TestStringMethods(unittest.TestCase):
 
         self.assertFalse(func.check_continue(df))
 
-    # 全長と一致するラインを開けるテスト（列）
     def test_open1_column(self):
         expected_data = {
             0: [e, e, e, e, o],
@@ -177,7 +176,6 @@ class TestStringMethods(unittest.TestCase):
 
         assert_frame_equal(actual_df, expected_df)
 
-    # 全長と一致するラインを開けるテスト（行）
     def test_open1_row(self):
         expected_data = {
             0: [o, o, o, o, o],
@@ -211,7 +209,6 @@ class TestStringMethods(unittest.TestCase):
 
         assert_frame_equal(actual_df, expected_df)
 
-    # 全長と一致するラインを開けるテスト
     def test_open1_all(self):
         expected_data = {
             0: [o, o, o, o, o],
@@ -246,7 +243,6 @@ class TestStringMethods(unittest.TestCase):
 
         assert_frame_equal(actual_df, expected_df)
 
-    # 全長と一致するラインを開けるテスト
     def test_open2_column(self):
         expected_data = {
             0: [o, e, e, e, e],
@@ -279,7 +275,41 @@ class TestStringMethods(unittest.TestCase):
 
         func.main_logic(actual_df, "open2")
 
-        # assert_frame_equal(actual_df, expected_df)
+        assert_frame_equal(actual_df, expected_df)
+
+    def test_open2_row(self):
+        expected_data = {
+            0: [o, o, o, x, o],
+            1: [e, e, e, e, e],
+            2: [e, e, e, e, e],
+            3: [e, e, e, e, e],
+            4: [e, e, e, e, e]
+        }
+        expected_df = pd.DataFrame(expected_data).transpose()
+
+        config.picross = {
+            "length": 5,
+            "row": {
+                "setting": [
+                    [3,1],
+                    [0],
+                    [0],
+                    [0],
+                    [0]
+                ]
+            },
+            "column": {
+                "setting": [
+                    [1], [1], [1], [0], [1]
+                ]
+            }
+        }
+
+        actual_df = pd.DataFrame(empty_data_5x5)
+
+        func.main_logic(actual_df, "open2")
+
+        assert_frame_equal(actual_df, expected_df)
 
 
 if __name__ == '__main__':
