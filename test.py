@@ -36,7 +36,7 @@ class TestClass(unittest.TestCase):
             }
         }
 
-    def test_status(self):
+    def test_get_line_serialize(self):
         expect_column0 = [
             config.empty + ":1",
             config.open + ":1"
@@ -59,14 +59,33 @@ class TestClass(unittest.TestCase):
             1: [o, e, e, e, o],
         }
         df = pd.DataFrame(data).transpose()
-        actual = func.get_status(df[0])
+        actual = func.get_line_serialize(df[0])
         self.assertEqual(actual, expect_column0)
 
-        actual = func.get_status(df.iloc[0])
+        actual = func.get_line_serialize(df.iloc[0])
         self.assertEqual(actual, expect_row0)
 
-        actual = func.get_status(df.iloc[1])
+        actual = func.get_line_serialize(df.iloc[1])
         self.assertEqual(actual, expect_row1)
+
+    def test_create_line(self):
+        expected_line = [
+            config.empty,
+            config.blank,
+            config.blank,
+            config.open,
+            config.open,
+            config.open,
+            config.open
+        ]
+        status = [
+            config.empty + ":1",
+            config.blank + ":2",
+            config.open + ":3",
+            config.open + ":1"
+        ]
+        actual_line = func.create_line(status)
+        self.assertEqual(actual_line, expected_line)
 
     # 開始時点
     def test_check_continue_start(self):
@@ -171,7 +190,7 @@ class TestClass(unittest.TestCase):
             }
         }
 
-        actual_df = pd.DataFrame(empty_data_5x5)
+        actual_df = pd.DataFrame(empty_data_5x5).transpose()
         func.main_logic(actual_df, "open1")
 
         assert_frame_equal(actual_df, expected_df)
@@ -204,7 +223,7 @@ class TestClass(unittest.TestCase):
             }
         }
 
-        actual_df = pd.DataFrame(empty_data_5x5)
+        actual_df = pd.DataFrame(empty_data_5x5).transpose()
         func.main_logic(actual_df, "open1")
 
         assert_frame_equal(actual_df, expected_df)
@@ -237,7 +256,7 @@ class TestClass(unittest.TestCase):
             }
         }
 
-        actual_df = pd.DataFrame(empty_data_5x5)
+        actual_df = pd.DataFrame(empty_data_5x5).transpose()
 
         func.main_logic(actual_df, "open1")
 
@@ -305,12 +324,168 @@ class TestClass(unittest.TestCase):
             }
         }
 
-        actual_df = pd.DataFrame(empty_data_5x5)
+        actual_df = pd.DataFrame(empty_data_5x5).transpose()
 
         func.main_logic(actual_df, "open2")
 
         assert_frame_equal(actual_df, expected_df)
 
+    def test_open3_column(self):
+        expected_data = {
+            0: [o, x, o, o, o],
+            1: [x, o, o, x, x],
+            2: [o, o, o, x, x],
+            3: [x, x, x, x, x],
+            4: [o, o, o, o, x]
+        }
+        expected_df = pd.DataFrame(expected_data).transpose()
+
+        config.picross = {
+            "length": 5,
+            "row": {
+                "setting": [
+                    [1,3],
+                    [2],
+                    [3],
+                    [0],
+                    [4]
+                ]
+            },
+            "column": {
+                "setting": [
+                    [1,1,1], [2,1], [3,1], [1,1], [1]
+                ]
+            }
+        }
+
+        initial_data = {
+            0: [e, x, e, e, e],
+            1: [x, e, e, x, x],
+            2: [e, e, e, x, x],
+            3: [x, x, x, x, x],
+            4: [e, e, e, e, x]
+        }
+
+        actual_df = pd.DataFrame(initial_data).transpose()
+        func.main_logic(actual_df, "open3")
+
+        assert_frame_equal(actual_df, expected_df)
+
+    def test_open3_row(self):
+        expected_data = {
+            0: [x, o, o, x, o],
+            1: [e, e, e, e, e],
+            2: [e, e, e, e, e],
+            3: [e, e, e, e, e],
+            4: [e, e, e, e, e]
+        }
+        expected_df = pd.DataFrame(expected_data).transpose()
+
+        config.picross = {
+            "length": 5,
+            "row": {
+                "setting": [
+                    [2,1],
+                    [0],
+                    [0],
+                    [0],
+                    [0]
+                ]
+            },
+            "column": {
+                "setting": [
+                    [0], [1], [1], [0], [1]
+                ]
+            }
+        }
+
+        initial_data = {
+            0: [x, o, e, x, e],
+            1: [e, e, e, e, e],
+            2: [e, e, e, e, e],
+            3: [e, e, e, e, e],
+            4: [e, e, e, e, e]
+        }
+
+        actual_df = pd.DataFrame(initial_data).transpose()
+        func.main_logic(actual_df, "open3")
+
+        assert_frame_equal(actual_df, expected_df)
+
+    def test_open4(self):
+        expected_data = {
+            0: [o, o, x, x, x],
+            1: [o, x, x, x, x],
+            2: [x, x, x, x, x],
+            3: [x, x, x, x, x],
+            4: [x, x, x, x, x]
+        }
+        expected_df = pd.DataFrame(expected_data).transpose()
+
+        config.picross = {
+            "length": 5,
+            "row": {
+                "setting": [
+                    [2],
+                    [1],
+                    [0],
+                    [0],
+                    [0]
+                ]
+            },
+            "column": {
+                "setting": [
+                    [2], [1], [0], [0], [0]
+                ]
+            }
+        }
+
+        initial_data = {
+            0: [o, o, x, e, e],
+            1: [o, e, e, e, e],
+            2: [e, e, e, e, e],
+            3: [x, e, e, e, e],
+            4: [e, e, e, e, e]
+        }
+
+        actual_df = pd.DataFrame(initial_data).transpose()
+        func.main_logic(actual_df, "open4")
+
+        assert_frame_equal(actual_df, expected_df)
+
+    def test_open5(self):
+        expected_data = {
+            0: [e, e, o, e, e],
+            1: [o, e, e, e, e],
+            2: [o, e, e, e, e],
+            3: [o, e, e, e, e],
+            4: [e, e, e, e, e]
+        }
+        expected_df = pd.DataFrame(expected_data).transpose()
+
+        config.picross = {
+            "length": 5,
+            "row": {
+                "setting": [
+                    [3],
+                    [1],
+                    [1],
+                    [1],
+                    [0]
+                ]
+            },
+            "column": {
+                "setting": [
+                    [4], [1], [1], [0], [0]
+                ]
+            }
+        }
+
+        actual_df = pd.DataFrame(empty_data_5x5).transpose()
+
+        func.main_logic(actual_df, "open5")
+
+        assert_frame_equal(actual_df, expected_df)
 
 if __name__ == '__main__':
     unittest.main()

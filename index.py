@@ -14,7 +14,7 @@ df = pd.DataFrame(np.full((row_length, column_length), config.empty))
 # print(df)
 
 # line_types = ["column", "row"]
-logics = ["open1", "open2"]
+logics = ["open1", "open2", "open3", "open4"]
 
 # 最後のmainの形を想像する
 while (func.check_continue(df)):
