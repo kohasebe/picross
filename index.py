@@ -22,6 +22,7 @@ logics = {
     "open5": 0,
     "open6": 0,
     "open7": 0,
+    "open8": 0,
 }
 
 # 最後のmainの形を想像する

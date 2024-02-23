@@ -68,10 +68,6 @@ def get_line_serialize(dfi):
 def create_line(line_serialize):
     line = []
     for ls in line_serialize:
-        status, num = split_line_serialize(ls)
-        for i in range(int(num)):
-            line.append(status)
-
         # カンマ区切りで差し込むロジックは使わなくなりそうなので一旦コメントアウト
         # for l in ls.split(","):
         #     if isinstance(l, list):
@@ -83,6 +79,11 @@ def create_line(line_serialize):
         #         status, num = split_line_serialize(l)
         #         for i in range(int(num)):
         #             line.append(status)
+
+        status, num = split_line_serialize(ls)
+        for i in range(int(num)):
+            line.append(status)
+
     return line
 
 # 設定値とopenとなった数の合計を比較して全部開いたかを確かめる
@@ -182,6 +183,7 @@ def open5(dfi, settingi):
     else:
         return dfi
 
+# emptyが続く間で確定したところを埋める
 # 2 [e,e,e,e,e]のとき何もしない
 # 2 [e,e,x,e,e]のとき何もしない
 # 3 [x,e,e,e,e]のとき[x,e,o,o,e]にする
@@ -229,51 +231,111 @@ def open6(dfi, settingi):
 
     return create_line(line_serialize)
 
-# 確定した箇所の両端をblankで埋める
+# 両端で確定したblankを入れる
 # 1,1 [o,e,e,e,e]のとき[o,x,e,e,e]にする
 # 1,1 [e,e,e,e,o]のとき[e,e,e,x,o]にする
 # 1,1 [o,e,x,e,e]のとき[o,x,x,e,e]にする
+# 両端で確定したopenを入れる
+# 3,1 [o,e,e,e,e]のとき[o,o,o,e,e]にする
+# 1,3 [e,e,e,e,o]のとき[e,e,o,o,o]にする
 def open7(dfi, settingi):
     line_serialize = get_line_serialize(dfi)
     for se_i, se in enumerate(settingi):
         for ls_i, ls in enumerate(line_serialize):
             status, num = split_line_serialize(ls)
-            if (status == config.open and num == se):
-                # ネクストがあるかをチェック
-                if (len(line_serialize) > ls_i + 1):
-                    next_ls = line_serialize[ls_i + 1]
-                    # 始端を考える
-                    # 1,1 [o,e,e,e,e]のとき[o,x,e,e,e]にする
-                    if (se_i == 0):
-                        next_status, nextnum = split_line_serialize(next_ls)
-                        if (next_status == config.empty):
+            if (status == config.open):
+                # 始端を考える
+                if (se_i == 0 and ls_i == 0 and len(line_serialize) > ls_i + 1):
+                    next_status, next_num = split_line_serialize(line_serialize[ls_i + 1])
+                    if (next_status == config.empty):
+                        # 1,1 [o,e,e,e,e]のとき[o,x,e,e,e]にする
+                        if (num == se):
                             line_serialize = update_line_serialize(line_serialize, ls_i + 1, [
                                 create_line_serialize(config.blank, 1),
-                                create_line_serialize(next_status, nextnum - 1),
+                                create_line_serialize(next_status, next_num - 1),
                             ])
-                else:
-                    # 終端を考える
-                    # 1,1 [e,e,e,e,o]のとき[e,e,e,x,o]にする
-                    if (len(settingi) == se_i + 1):
-                        previous_status, previous_num = split_line_serialize(line_serialize[ls_i-1])
-                        if (previous_status == config.empty):
+
+                        # 3,1 [o,e,e,e,e]のとき[o,o,o,e,e]にする
+                        else:
+                            line_serialize = update_line_serialize(line_serialize, ls_i + 1, [
+                                create_line_serialize(config.open, se - num),
+                                create_line_serialize(next_status, next_num - (se - num)),
+                            ])
+
+
+                # 終端を考える
+                if (len(settingi) == se_i + 1 and len(line_serialize) == ls_i + 1 and ls_i >= 1):
+                    previous_status, previous_num = split_line_serialize(line_serialize[ls_i - 1])
+                    if (previous_status == config.empty):
+                        # 1,1 [e,e,e,e,o]のとき[e,e,e,x,o]にする
+                        if (num == se):
                             line_serialize = update_line_serialize(line_serialize, ls_i - 1, [
                                 create_line_serialize(previous_status, previous_num - 1),
                                 create_line_serialize(config.blank, 1),
                             ])
 
+                        # 1,3 [e,e,e,e,o]のとき[e,e,o,o,o]にする
+                        else:
+                            line_serialize = update_line_serialize(line_serialize, ls_i - 1, [
+                                create_line_serialize(previous_status, previous_num - (se - num)),
+                                create_line_serialize(config.open, se - num),
+                            ])
+
     return create_line(line_serialize)
 
-# 端っこが確定した時の処理
+# 端っこが確定した時にblankにする
+# 2 1 [x,o,o,e,e]のとき[x,o,o,x,e]にする
+# 1 2 [e,e,o,o,x]のとき[e,x,o,o,x]にする
+# 端っこが確定した時にopenにする
 # 2 1 [x,o,e,e,e]のとき[x,o,o,e,e]にする
-# 2 1 [e,x,o,e,e,e]のとき[e,x,o,o,x,o]にする(openの数が設定と一致するので次のループでeはxになる)
-# def open7(dfi, settingi):
-#     return
+# 3 [e,e,e,o,x]のとき[e,o,o,o,x]にする
+def open8(dfi, settingi):
+    line_serialize = get_line_serialize(dfi)
+    for se_i, se in enumerate(settingi):
+        for ls_i, ls in enumerate(line_serialize):
+            status, num = split_line_serialize(ls)
+            if (status == config.blank):
+                # 始端を考える
+                if (se_i == 0 and ls_i == 0 and len(line_serialize) > ls_i + 1):
+                    next_status, next_num = split_line_serialize(line_serialize[ls_i + 1])
+                    if (next_status == config.open and len(line_serialize) > ls_i + 2):
+                        next_next_status, next_next_num = split_line_serialize(line_serialize[ls_i + 2])
+                        if (next_next_status == config.empty):
+                            # 2 1 [x,o,o,e,e]のとき[x,o,o,x,e]にする
+                            if (next_num == se):
+                                line_serialize = update_line_serialize(line_serialize, ls_i + 2, [
+                                    create_line_serialize(config.blank, 1),
+                                    create_line_serialize(next_next_status, next_next_num - 1),
+                                ])
 
-# 1,1 [e,e,o,e,e]のとき[e,x,o,x,e]にする
-# 1,2 [e,e,o,e,e,e]のとき何もしない
-# 1,2 [e,x,o,e,e,e]のとき何もしない
-# def open5(dfi, settingi):
+                            # 2 1 [x,o,e,e,e]のとき[x,o,o,e,e]にする
+                            else:
+                                line_serialize = update_line_serialize(line_serialize, ls_i + 2, [
+                                    create_line_serialize(config.open, se - next_num),
+                                    create_line_serialize(next_next_status, next_next_num - (se - next_num)),
+                                ])
+
+                # 終端を考える
+                if (len(settingi) == se_i + 1 and len(line_serialize) == ls_i + 1):
+                    previous_status, previous_num = split_line_serialize(line_serialize[ls_i - 1])
+                    if(previous_status == config.open and ls_i >= 2):
+                        previous_previous_status, previous_previous_num = split_line_serialize(line_serialize[ls_i - 2])
+                        if (previous_previous_status == config.empty):
+                            # 1 2 [e,e,o,o,x]のとき[e,x,o,o,x]にする
+                            if (previous_num == se):
+                                line_serialize = update_line_serialize(line_serialize, ls_i - 2, [
+                                    create_line_serialize(previous_previous_status, previous_previous_num - 1),
+                                    create_line_serialize(config.blank, 1),
+                                ])
+
+                            # 3 [e,e,e,o,x]のとき[e,o,o,o,x]にする
+                            else:
+                                line_serialize = update_line_serialize(line_serialize, ls_i - 2, [
+                                    create_line_serialize(previous_previous_status, previous_previous_num - (se - num)),
+                                    create_line_serialize(config.open, se - num),
+                                ])
+
+    return create_line(line_serialize)
 
 # 3,3 [e,e,e,e,e,e,e,e]のとき[e,o,o,e,e,o,o,e]にする
 # 3 [x,e,o,e,e]のとき[x,e,o,o,e]にする
@@ -282,6 +344,10 @@ def open7(dfi, settingi):
 # def open5(dfi, settingi):
 
 
+# 1,1 [e,e,o,e,e]のとき[e,x,o,x,e]にする
+# 1,2 [e,e,o,e,e,e]のとき何もしない
+# 1,2 [e,x,o,e,e,e]のとき何もしない
+# def open5(dfi, settingi):
 
 # 2 [e,e,x,e,e]のときなにもしない
 # 2 1 [e,e,x,e,e]のとき[o,o,x,e,e]にする
@@ -330,10 +396,3 @@ def open7(dfi, settingi):
 # def open7(dfi, settingi):
 #     status = get_status(dfi)
 #     return
-
-
-
-
-def fill_blank(dfi, settingi):
-    return
-

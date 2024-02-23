@@ -1,13 +1,13 @@
 import sys
 from picross import q1
 
-# empty = 'empty'
-# blank = 'blank'
-# open = 'open'
+empty = 'empty'
+blank = 'blank'
+open = 'open'
 
-empty = '□'
-blank = 'x'
-open = '■'
+# empty = '□'
+# blank = 'x'
+# open = '■'
 
 # expected = {
 #     0: [o, o, o, o, o],
