@@ -1,3 +1,5 @@
+# マリオのスーパーピクロス
+# マリオ LEVEL1 A
 picross = {
     "length": 5,
     "row": {
