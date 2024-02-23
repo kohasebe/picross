@@ -778,5 +778,48 @@ class TestClass(unittest.TestCase):
 
         assert_frame_equal(actual_df, expected_df)
 
+    # 1,1 [o,e,x,e,e]のとき[o,x,x,e,e]にする
+    def test_open7_3(self):
+        expected_data = {
+            0: [o, x, x, e, e],
+            1: [x, e, e, e, e],
+            2: [e, e, e, e, e],
+            3: [e, e, e, e, e],
+            4: [e, e, e, e, e]
+        }
+        expected_df = pd.DataFrame(expected_data).transpose()
+
+        config.picross = {
+            "length": 5,
+            "row": {
+                "setting": [
+                    [1,1],
+                    [0],
+                    [0],
+                    [0],
+                    [0]
+                ]
+            },
+            "column": {
+                "setting": [
+                    [1], [0], [0], [0], [1]
+                ]
+            }
+        }
+
+        initial_data = {
+            0: [o, e, x, e, e],
+            1: [e, e, e, e, e],
+            2: [e, e, e, e, e],
+            3: [e, e, e, e, e],
+            4: [e, e, e, e, e]
+        }
+
+        actual_df = pd.DataFrame(initial_data).transpose()
+
+        func.main_logic(actual_df, "open7")
+
+        assert_frame_equal(actual_df, expected_df)
+
 if __name__ == '__main__':
     unittest.main()

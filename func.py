@@ -210,10 +210,7 @@ def open6(dfi, settingi):
 # 確定した箇所の両端をblankで埋める
 # 1,1 [o,e,e,e,e]のとき[o,x,e,e,e]にする
 # 1,1 [e,e,e,e,o]のとき[e,e,e,x,o]にする
-# 1,1 [e,e,o,e,e]のとき[e,x,o,x,e]にする
-# 1,2 [e,e,o,e,e]のとき何もしない
-# 1,1 [o,e,x,e,e,e]のとき[o,x,x,e,e,e]にする
-# 1,2 [e,x,o,e,e,e]のとき何もしない
+# 1,1 [o,e,x,e,e]のとき[o,x,x,e,e]にする
 def open7(dfi, settingi):
     line_serialize = get_line_serialize(dfi)
     for se_i, se in enumerate(settingi):
@@ -247,6 +244,12 @@ def open7(dfi, settingi):
                         ])
 
     return create_line(line_serialize)
+
+
+# 1,1 [e,e,o,e,e]のとき[e,x,o,x,e]にする
+# 1,2 [e,e,o,e,e,e]のとき何もしない
+# 1,2 [e,x,o,e,e,e]のとき何もしない
+# def open5(dfi, settingi):
 
 # 3,3 [e,e,e,e,e,e,e,e]のとき[e,o,o,e,e,o,o,e]にする
 # 3 [x,e,o,e,e]のとき[x,e,o,o,e]にする
