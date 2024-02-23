@@ -1,17 +1,8 @@
-# for i in range(3):
-#     print("Outer loop:", i)
-#     for j in range(3):
-#         print("Inner loop:", j)
-#         if j == 1:
-#             break  # 内側のループのみを中断する
+my_list = [1, 2, 3, 4]
 
+# del文を使用してインデックス2の要素を削除する
+del my_list[0]
 
-for i in range(3):
-    print("Outer loop:", i)
-    for j in range(3):
-        print("Inner loop:", j)
-        if j == 1:
-            break  # 内側のループから一気に抜ける
-    else:
-        continue
-    break
+my_list.insert(0, 5)
+
+print(my_list)

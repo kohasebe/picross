@@ -9,7 +9,6 @@ def main_logic(df, logic):
         for i in range((len(setting))):
             if (line_type == "column"):
                 df[i] = globals()[logic](df[i], setting[i])
-                print
             elif (line_type == "row"):
                 df.iloc[i] = globals()[logic](df.iloc[i], setting[i])
 
@@ -21,8 +20,19 @@ def main_logic(df, logic):
 def create_line_serialize(status, num):
     return status + ":" + str(num)
 
+def update_line_serialize(line_serialize, i, serialize):
+    # ほんとはこう書いてたけどforループの中でline_serializeを更新する動きができなくなるのでしかたなく変えた
+    # line_serialize[i] = ",".join(serialize)
+    del line_serialize[i]
+    for s in serialize:
+        line_serialize.insert(i, s)
+        i += 1
+
+    return get_line_serialize(create_line(line_serialize))
+
 def split_line_serialize(serialize):
-    return serialize.split(":")
+    status, num = serialize.split(":")
+    return status, int(num)
 
 def get_line_serialize(dfi):
     status = []
@@ -150,48 +160,101 @@ def open5(dfi, settingi):
     else:
         return dfi
 
-# 3 [x,e,e,e,x,e,e,e]のとき何もしない
-# 3 [x,e,e,e]のとき[x,o,o,o]にする
-
+# 2 [e,e,e,e,e]のとき何もしない
+# 2 [e,e,x,e,e]のとき何もしない
 # 3 [x,e,e,e,e]のとき[x,e,o,o,e]にする
-# 3 [x,e,o,e,e]のとき[x,e,o,o,e]にする
-# 3 [x,e,e,o,e]のとき[x,e,o,o,e]にする
-# 1,4 [e,x,o,e,e,e,e,e]のとき何もしない
-# 1,4 [o,x,e,e,e,e,e]のとき[o,x,e,o,o,o,e]にする
+# 1,2 [o,x,e,e,e]のとき[o,x,e,o,e]にする
+# 1,3,3 [o,x,e,e,e,e,e,e,e,e]のとき何もしない
 def open6(dfi, settingi):
-    line_serialize = get_line_serialize(dfi) # x:1,e:3
-    before = line_serialize.copy()
+    line_serialize = get_line_serialize(dfi)
 
-    # 候補チェック
     for s in settingi:
-        # 3 [x,e,e,e,x,e,e,e]のとき何もしない
-        check1 = 0 # sより大きいemptyが複数回出てきたら無視する
+        # 候補チェック
+        check = 0 # s以上のemptyが複数回出てきたら無視する
+        flg = False
         for ls in line_serialize:
             status, num = split_line_serialize(ls)
             if (status == config.empty):
+                # 2 [e,e,e,e,e]のとき何もしない
+                if (num/2 > s):
+                    flg = True
+                    continue
+
+                # 2 [e,e,x,e,e]のとき何もしない
                 if (num >= s):
-                    check1 += 1
-        if (check1 > 1):
+                    check += 1
+                    if (check > 1):
+                        flg = True
+
+        if (flg):
             continue
 
         # 一回しか出てこなかったので次のロジックに行く
         # 3 [x,e,e,e,e]のとき[x,e,o,o,e]にする
+        # 1,2 [o,x,e,e,e]のとき[o,x,e,o,e]にする
         for i, ls in enumerate(line_serialize):
             status, num = split_line_serialize(ls)
             if (status == config.empty and num > s): # == のパターンはopen3で吸収してる
-                line_serialize[i] = create_line_serialize(config.open, s)
-                continue
+                # 例えばnum=4, s=3のときは有効, 例えばnum=6, s=3のときは無効
+                diff = num - s
+                if (diff > 0 and s > diff):
+                    line_serialize = update_line_serialize(line_serialize, i, [
+                        create_line_serialize(config.empty, diff),
+                        create_line_serialize(config.open, s - diff),
+                        create_line_serialize(config.empty, diff)
+                    ])
+                    continue
+
+    return create_line(line_serialize)
+
+# 確定した箇所の両端をblankで埋める
+# 1,1 [o,e,e,e,e]のとき[o,x,e,e,e]にする
+# 1,1 [e,e,e,e,o]のとき[e,e,e,x,o]にする
+# 1,1 [e,e,o,e,e]のとき[e,x,o,x,e]にする
+# 1,2 [e,e,o,e,e]のとき何もしない
+# 1,1 [o,e,x,e,e,e]のとき[o,x,x,e,e,e]にする
+# 1,2 [e,x,o,e,e,e]のとき何もしない
+def open7(dfi, settingi):
+    line_serialize = get_line_serialize(dfi)
+    for se_i, se in enumerate(settingi):
+        for ls_i, ls in enumerate(line_serialize):
+            status, num = split_line_serialize(ls)
+            if (status == config.open and num == se):
+                # ネクストがあるかをチェック
+                if (len(line_serialize) > ls_i + 1):
+                    next_ls = line_serialize[ls_i + 1]
+                    # 始端を考える
+                    # 1,1 [o,e,e,e,e]のとき[o,x,e,e,e]にする
+                    if (se_i == 0):
+                        next_status, nextnum = split_line_serialize(next_ls)
+                        line_serialize = update_line_serialize(line_serialize, ls_i + 1, [
+                            create_line_serialize(config.blank, 1),
+                            create_line_serialize(next_status, nextnum - 1),
+                        ])
+                    else:
+                        # 間にある場合
+                        # 1,1 [e,e,o,e,e]のとき[e,x,o,x,e]にする
+                        # 1,2 [e,e,o,e,e,e]のとき何もしない
+                        print
+                else:
+                    # 終端を考える
+                    # 1,1 [e,e,e,e,o]のとき[e,e,e,x,o]にする
+                    if (len(settingi) == se_i + 1):
+                        previous_status, previous_num = split_line_serialize(line_serialize[ls_i-1])
+                        line_serialize = update_line_serialize(line_serialize, ls_i - 1, [
+                            create_line_serialize(previous_status, previous_num - 1),
+                            create_line_serialize(config.blank, 1),
+                        ])
+
+    return create_line(line_serialize)
+
+# 3,3 [e,e,e,e,e,e,e,e]のとき[e,o,o,e,e,o,o,e]にする
+# 3 [x,e,o,e,e]のとき[x,e,o,o,e]にする
+# 3 [x,e,e,o,e]のとき[x,e,o,o,e]にする
+# 1,4 [e,x,o,e,e,e,e,e]のとき何もしない
+# def open5(dfi, settingi):
 
 
-    if (before.equals(line_serialize)):
-        return dfi
-    else:
-        return create_line(line_serialize)
-
-# 3 [x,e,e,e,x,e,e,e]のとき何もしない
-def open6_1(dfi, settingi):
-
-    return False
 
 # 2 [e,e,x,e,e]のときなにもしない
 # 2 1 [e,e,x,e,e]のとき[o,o,x,e,e]にする

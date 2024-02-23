@@ -105,6 +105,29 @@ class TestClass(unittest.TestCase):
         actual_line = func.create_line(status)
         self.assertEqual(actual_line, expected_line)
 
+    def test_update_line_serialize(self):
+        expected_line_serialize = [
+            config.open + ":1",
+            config.blank + ":2",
+            config.open + ":1",
+            config.empty + ":2",
+            config.blank + ":2",
+        ]
+
+        line_serialize = [
+            config.open + ":1",
+            config.blank + ":2",
+            config.empty + ":3",
+            config.blank + ":2",
+        ]
+
+        actual_line = func.update_line_serialize(line_serialize, 2, [
+            func.create_line_serialize(config.open, 1),
+            func.create_line_serialize(config.empty, 2),
+        ])
+
+        self.assertEqual(actual_line, expected_line_serialize)
+
     # 開始時点
     def test_check_continue_start(self):
         data = {
@@ -502,6 +525,256 @@ class TestClass(unittest.TestCase):
         actual_df = pd.DataFrame(empty_data_5x5).transpose()
 
         func.main_logic(actual_df, "open5")
+
+        assert_frame_equal(actual_df, expected_df)
+
+    # 2 [e,e,e,e,e]のとき何もしない
+    def test_open6_1(self):
+        expected_data = {
+            0: [e, e, e, e, e],
+            1: [e, e, e, e, e],
+            2: [e, e, e, e, e],
+            3: [e, e, e, e, e],
+            4: [e, e, e, e, e]
+        }
+        expected_df = pd.DataFrame(expected_data).transpose()
+
+        config.picross = {
+            "length": 5,
+            "row": {
+                "setting": [
+                    [2],
+                    [0],
+                    [0],
+                    [0],
+                    [0]
+                ]
+            },
+            "column": {
+                "setting": [
+                    [1], [1], [0], [0], [0]
+                ]
+            }
+        }
+
+        actual_df = pd.DataFrame(empty_data_5x5).transpose()
+
+        func.main_logic(actual_df, "open6")
+
+        assert_frame_equal(actual_df, expected_df)    # 2 [e,e,x,e,e]のとき何もしない
+
+    # 2 [e,e,x,e,e]のとき何もしない
+    def test_open6_2(self):
+        expected_data = {
+            0: [e, e, x, e, e],
+            1: [e, e, e, e, e],
+            2: [e, e, e, e, e],
+            3: [e, e, e, e, e],
+            4: [e, e, e, e, e]
+        }
+        expected_df = pd.DataFrame(expected_data).transpose()
+
+        config.picross = {
+            "length": 5,
+            "row": {
+                "setting": [
+                    [2],
+                    [0],
+                    [0],
+                    [0],
+                    [0]
+                ]
+            },
+            "column": {
+                "setting": [
+                    [1], [1], [0], [0], [0]
+                ]
+            }
+        }
+
+        initial_data = {
+            0: [e, e, x, e, e],
+            1: [e, e, e, e, e],
+            2: [e, e, e, e, e],
+            3: [e, e, e, e, e],
+            4: [e, e, e, e, e]
+        }
+
+        actual_df = pd.DataFrame(initial_data).transpose()
+
+        func.main_logic(actual_df, "open6")
+
+        assert_frame_equal(actual_df, expected_df)
+
+    # 3 [x,e,e,e,e]のとき[x,e,o,o,e]にする
+    def test_open6_3(self):
+        expected_data = {
+            0: [x, e, o, o, e],
+            1: [e, e, e, e, e],
+            2: [e, e, e, e, e],
+            3: [e, e, e, e, e],
+            4: [e, e, e, e, e]
+        }
+        expected_df = pd.DataFrame(expected_data).transpose()
+
+        config.picross = {
+            "length": 5,
+            "row": {
+                "setting": [
+                    [3],
+                    [0],
+                    [0],
+                    [0],
+                    [0]
+                ]
+            },
+            "column": {
+                "setting": [
+                    [0], [0], [1], [1], [1]
+                ]
+            }
+        }
+
+        initial_data = {
+            0: [x, e, e, e, e],
+            1: [e, e, e, e, e],
+            2: [e, e, e, e, e],
+            3: [e, e, e, e, e],
+            4: [e, e, e, e, e]
+        }
+
+        actual_df = pd.DataFrame(initial_data).transpose()
+
+        func.main_logic(actual_df, "open6")
+
+        assert_frame_equal(actual_df, expected_df)
+
+    # 1,2 [o,x,e,e,e]のとき[o,x,e,o,e]にする
+    def test_open6_4(self):
+        expected_data = {
+            0: [o, x, e, o, e],
+            1: [e, e, e, e, e],
+            2: [e, e, e, e, e],
+            3: [e, e, e, e, e],
+            4: [e, e, e, e, e]
+        }
+        expected_df = pd.DataFrame(expected_data).transpose()
+
+        config.picross = {
+            "length": 5,
+            "row": {
+                "setting": [
+                    [1,2],
+                    [0],
+                    [0],
+                    [0],
+                    [0]
+                ]
+            },
+            "column": {
+                "setting": [
+                    [1], [0], [0], [1], [1]
+                ]
+            }
+        }
+
+        initial_data = {
+            0: [o, x, e, e, e],
+            1: [e, e, e, e, e],
+            2: [e, e, e, e, e],
+            3: [e, e, e, e, e],
+            4: [e, e, e, e, e]
+        }
+
+        actual_df = pd.DataFrame(initial_data).transpose()
+
+        func.main_logic(actual_df, "open6")
+
+        assert_frame_equal(actual_df, expected_df)
+
+    # 1,1 [o,e,e,e,e]のとき[o,x,e,e,e]にする
+    def test_open7_1(self):
+        expected_data = {
+            0: [o, x, e, e, e],
+            1: [x, e, e, e, e],
+            2: [e, e, e, e, e],
+            3: [e, e, e, e, e],
+            4: [e, e, e, e, e]
+        }
+        expected_df = pd.DataFrame(expected_data).transpose()
+
+        config.picross = {
+            "length": 5,
+            "row": {
+                "setting": [
+                    [1,1],
+                    [0],
+                    [0],
+                    [0],
+                    [0]
+                ]
+            },
+            "column": {
+                "setting": [
+                    [1], [0], [0], [1], [0]
+                ]
+            }
+        }
+
+        initial_data = {
+            0: [o, e, e, e, e],
+            1: [e, e, e, e, e],
+            2: [e, e, e, e, e],
+            3: [e, e, e, e, e],
+            4: [e, e, e, e, e]
+        }
+
+        actual_df = pd.DataFrame(initial_data).transpose()
+
+        func.main_logic(actual_df, "open7")
+
+        assert_frame_equal(actual_df, expected_df)
+
+    # 1,1 [e,e,e,e,o]のとき[e,e,e,x,o]にする
+    def test_open7_2(self):
+        expected_data = {
+            0: [e, e, e, x, o],
+            1: [e, e, e, e, x],
+            2: [e, e, e, e, e],
+            3: [e, e, e, e, e],
+            4: [e, e, e, e, e]
+        }
+        expected_df = pd.DataFrame(expected_data).transpose()
+
+        config.picross = {
+            "length": 5,
+            "row": {
+                "setting": [
+                    [1,1],
+                    [0],
+                    [0],
+                    [0],
+                    [0]
+                ]
+            },
+            "column": {
+                "setting": [
+                    [1], [0], [0], [0], [1]
+                ]
+            }
+        }
+
+        initial_data = {
+            0: [e, e, e, e, o],
+            1: [e, e, e, e, e],
+            2: [e, e, e, e, e],
+            3: [e, e, e, e, e],
+            4: [e, e, e, e, e]
+        }
+
+        actual_df = pd.DataFrame(initial_data).transpose()
+
+        func.main_logic(actual_df, "open7")
 
         assert_frame_equal(actual_df, expected_df)
 

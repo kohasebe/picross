@@ -19,7 +19,8 @@ logics = {
     "open2": 0,
     "open3": 0,
     "open4": 0,
-    "open5": 0
+    "open5": 0,
+    "open6": 0,
 }
 
 # 最後のmainの形を想像する
