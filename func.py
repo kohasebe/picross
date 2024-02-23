@@ -224,10 +224,11 @@ def open7(dfi, settingi):
                     # 1,1 [o,e,e,e,e]のとき[o,x,e,e,e]にする
                     if (se_i == 0):
                         next_status, nextnum = split_line_serialize(next_ls)
-                        line_serialize = update_line_serialize(line_serialize, ls_i + 1, [
-                            create_line_serialize(config.blank, 1),
-                            create_line_serialize(next_status, nextnum - 1),
-                        ])
+                        if (next_status == config.empty):
+                            line_serialize = update_line_serialize(line_serialize, ls_i + 1, [
+                                create_line_serialize(config.blank, 1),
+                                create_line_serialize(next_status, nextnum - 1),
+                            ])
                     else:
                         # 間にある場合
                         # 1,1 [e,e,o,e,e]のとき[e,x,o,x,e]にする
@@ -238,10 +239,11 @@ def open7(dfi, settingi):
                     # 1,1 [e,e,e,e,o]のとき[e,e,e,x,o]にする
                     if (len(settingi) == se_i + 1):
                         previous_status, previous_num = split_line_serialize(line_serialize[ls_i-1])
-                        line_serialize = update_line_serialize(line_serialize, ls_i - 1, [
-                            create_line_serialize(previous_status, previous_num - 1),
-                            create_line_serialize(config.blank, 1),
-                        ])
+                        if (previous_status == config.empty):
+                            line_serialize = update_line_serialize(line_serialize, ls_i - 1, [
+                                create_line_serialize(previous_status, previous_num - 1),
+                                create_line_serialize(config.blank, 1),
+                            ])
 
     return create_line(line_serialize)
 
