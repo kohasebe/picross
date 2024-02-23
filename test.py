@@ -87,23 +87,24 @@ class TestClass(unittest.TestCase):
         actual_line = func.create_line(status)
         self.assertEqual(actual_line, expected_line)
 
-    def test_create_line2(self):
-        expected_line = [
-            config.empty,
-            config.blank,
-            config.blank,
-            config.open,
-            config.open,
-            config.open,
-            config.open
-        ]
-        status = [
-            config.empty + ":1",
-            config.blank + ":2",
-            config.open + ":3," + config.open + ":1",
-        ]
-        actual_line = func.create_line(status)
-        self.assertEqual(actual_line, expected_line)
+    # カンマ区切りで差し込むロジックは使わなくなりそうなので一旦コメントアウト
+    # def test_create_line2(self):
+    #     expected_line = [
+    #         config.empty,
+    #         config.blank,
+    #         config.blank,
+    #         config.open,
+    #         config.open,
+    #         config.open,
+    #         config.open
+    #     ]
+    #     status = [
+    #         config.empty + ":1",
+    #         config.blank + ":2",
+    #         config.open + ":3," + config.open + ":1",
+    #     ]
+    #     actual_line = func.create_line(status)
+    #     self.assertEqual(actual_line, expected_line)
 
     def test_update_line_serialize(self):
         expected_line_serialize = [

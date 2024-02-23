@@ -17,9 +17,19 @@ def main_logic(df, logic):
     else:
         return True
 
+def get_picross_size():
+    return config.picross["length"]
+
+def get_column_setting():
+    return config.picross["column"]["setting"]
+
+def get_row_setting():
+    return config.picross["row"]["setting"]
+
 def create_line_serialize(status, num):
     return status + ":" + str(num)
 
+# i番目にserializeで指定した配列を挿入する
 def update_line_serialize(line_serialize, i, serialize):
     # ほんとはこう書いてたけどforループの中でline_serializeを更新する動きができなくなるのでしかたなく変えた
     # line_serialize[i] = ",".join(serialize)
@@ -34,6 +44,8 @@ def split_line_serialize(serialize):
     status, num = serialize.split(":")
     return status, int(num)
 
+# 渡されたdfの行/列をシリアライズ形式に変更する
+# [open, open, blank, empty, open]を["open:2","blank:1","empty:1","open:1"]と表現する
 def get_line_serialize(dfi):
     status = []
     for i in range(len(dfi)):
@@ -43,28 +55,38 @@ def get_line_serialize(dfi):
         else:
             last_status, num = split_line_serialize(status[-1])
             if (last_status == s):
-                num = int(num) + 1
+                num = num + 1
                 status[-1] = create_line_serialize(s, num)
             else:
                 status.append(create_line_serialize(s, 1))
 
     return status
 
+# シリアライズ形式のlineをdfに戻せる形にする
+# ["open:2","blank:1","empty:1","open:1"]を[open, open, blank, empty, open]にする
+# ["open:2,blank:1","empty:1,open:1"]を[open, open, blank, empty, open]にする
 def create_line(line_serialize):
     line = []
     for ls in line_serialize:
-        for l in ls.split(","):
-            if isinstance(l, list):
-                for v in l:
-                    status, num = split_line_serialize(v)
-                    for i in range(int(num)):
-                        line.append(status)
-            else:
-                status, num = split_line_serialize(l)
-                for i in range(int(num)):
-                    line.append(status)
+        status, num = split_line_serialize(ls)
+        for i in range(int(num)):
+            line.append(status)
+
+        # カンマ区切りで差し込むロジックは使わなくなりそうなので一旦コメントアウト
+        # for l in ls.split(","):
+        #     if isinstance(l, list):
+        #         for v in l:
+        #             status, num = split_line_serialize(v)
+        #             for i in range(int(num)):
+        #                 line.append(status)
+        #     else:
+        #         status, num = split_line_serialize(l)
+        #         for i in range(int(num)):
+        #             line.append(status)
     return line
 
+# 設定値とopenとなった数の合計を比較して全部開いたかを確かめる
+# Falseが返るとロジックのループが終了する
 def check_continue(df):
     open_count = 0
     empty_count = 0
@@ -76,11 +98,11 @@ def check_continue(df):
                 empty_count += 1
 
     expected_count = 0
-    for setting in config.picross["row"]["setting"]:
+    for setting in get_row_setting():
         for num in setting:
             expected_count += num
 
-    if (empty_count == pow(config.picross["length"], 2)):
+    if (empty_count == pow(get_picross_size(), 2)):
         return True
     elif (open_count == expected_count):
         return False
@@ -90,7 +112,7 @@ def check_continue(df):
 # 全長と一致するラインを開ける
 # 5 [e,e,e,e,e]のとき[o,o,o,o,o]にする
 def open1(dfi, settingi):
-    length = config.picross["length"]
+    length = get_picross_size()
     if (length == settingi[0]):
         return [config.open] * length
     else:
@@ -99,7 +121,7 @@ def open1(dfi, settingi):
 # openとblankの数を足すと全長と一致するときopenとblankを確定させる
 # 1 1 1 [e,e,e,e,e]のとき[o,x,o,x,o]にする
 def open2(dfi, settingi):
-    length = config.picross["length"]
+    length = get_picross_size()
     count = sum(settingi) + len(settingi) - 1
     if (len(settingi) >= 2 and length == count):
         line_serialize = []
@@ -118,7 +140,7 @@ def open2(dfi, settingi):
 # 2 1 [x,o,e,x,e]のとき[x,o,o,x,o]にする
 def open3(dfi, settingi):
     # 全体からblankの数を引いた数が設定値の合計と同じなら全部埋める
-    if ((config.picross["length"] - dfi.value_counts().get(config.blank, 0)) == sum(settingi)):
+    if ((get_picross_size() - dfi.value_counts().get(config.blank, 0)) == sum(settingi)):
         for i, v in enumerate(dfi):
             if (v == config.empty):
                 dfi[i] = config.open
@@ -138,7 +160,7 @@ def open4(dfi, settingi):
 # 盤面の過半数より大きい数字の時はいい感じにopenする
 # 4 [e,e,e,e,e]のとき[e,o,o,o,e]にする
 def open5(dfi, settingi):
-    length = config.picross["length"]
+    length = get_picross_size()
     line_serialize = get_line_serialize(dfi)
     max_empty_size = 0
     # 強烈に上書きをするのでemptyのサイズをチェックして一回しか実施しないようにする
@@ -229,11 +251,6 @@ def open7(dfi, settingi):
                                 create_line_serialize(config.blank, 1),
                                 create_line_serialize(next_status, nextnum - 1),
                             ])
-                    else:
-                        # 間にある場合
-                        # 1,1 [e,e,o,e,e]のとき[e,x,o,x,e]にする
-                        # 1,2 [e,e,o,e,e,e]のとき何もしない
-                        print
                 else:
                     # 終端を考える
                     # 1,1 [e,e,e,e,o]のとき[e,e,e,x,o]にする
@@ -247,6 +264,11 @@ def open7(dfi, settingi):
 
     return create_line(line_serialize)
 
+# 端っこが確定した時の処理
+# 2 1 [x,o,e,e,e]のとき[x,o,o,e,e]にする
+# 2 1 [e,x,o,e,e,e]のとき[e,x,o,o,x,o]にする(openの数が設定と一致するので次のループでeはxになる)
+# def open7(dfi, settingi):
+#     return
 
 # 1,1 [e,e,o,e,e]のとき[e,x,o,x,e]にする
 # 1,2 [e,e,o,e,e,e]のとき何もしない
@@ -309,11 +331,6 @@ def open7(dfi, settingi):
 #     status = get_status(dfi)
 #     return
 
-# 端っこが確定した時の処理
-# 2 1 [x,o,e,e,e]のとき[x,o,o,e,e]にする
-# 2 1 [e,x,o,e,e,e]のとき[e,x,o,o,x,o]にする(openの数が設定と一致するので次のループでeはxになる)
-# def open7(dfi, settingi):
-#     return
 
 
 
