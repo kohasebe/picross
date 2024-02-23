@@ -14,16 +14,22 @@ df = pd.DataFrame(np.full((row_length, column_length), config.empty))
 # print(df)
 
 # line_types = ["column", "row"]
-logics = ["open1", "open2", "open3", "open4"]
+logics = {
+    "open1": 0,
+    "open2": 0,
+    "open3": 0,
+    "open4": 0,
+    "open5": 0
+}
 
 # 最後のmainの形を想像する
 while (func.check_continue(df)):
     before = df.copy()
     for logic in logics:
-        func.main_logic(df, logic)
+        if (func.main_logic(df, logic)):
+            # ロジックが有効に働いた場合、カウントアップする
+            logics[logic] += 1
 
-    # print(before)
-    # print(df)
     if (before.equals(df)):
         print("前回と差分がなくなりました")
         if (func.check_continue(df)):
@@ -40,5 +46,9 @@ while (func.check_continue(df)):
 
 print("結果はこちら")
 print(df)
+
+print("ロジックが有効に働いた回数は以下")
+print(logics)
+
 
 print(pd.__version__)

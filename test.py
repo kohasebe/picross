@@ -87,6 +87,24 @@ class TestClass(unittest.TestCase):
         actual_line = func.create_line(status)
         self.assertEqual(actual_line, expected_line)
 
+    def test_create_line2(self):
+        expected_line = [
+            config.empty,
+            config.blank,
+            config.blank,
+            config.open,
+            config.open,
+            config.open,
+            config.open
+        ]
+        status = [
+            config.empty + ":1",
+            config.blank + ":2",
+            config.open + ":3," + config.open + ":1",
+        ]
+        actual_line = func.create_line(status)
+        self.assertEqual(actual_line, expected_line)
+
     # 開始時点
     def test_check_continue_start(self):
         data = {
